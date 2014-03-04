@@ -853,6 +853,7 @@ public class Main extends JavaPlugin implements Listener {
 					public void run() {
 						p2.teleport(getSpawnForPlayer(arena, pteam.get(p2.getName())));
 						p2.playSound(p2.getLocation(), Sound.CAT_MEOW, 1F, 1);
+						setTeam(p2, pteam.get(p2.getName()));
 						Byte team = 1;
 						if(pteam.get(p1.getName()) == "1"){
 							team = 11;
@@ -897,14 +898,24 @@ public class Main extends JavaPlugin implements Listener {
 				if(!bluekills.containsKey(arena)){
 					bluekills.put(arena, 0);
 				}
-				if( b.getData() == (byte) 11  && pteam.get(event.getPlayer().getName()) == "1"){
-					// kill confirmed for red (picked up blue)
-					redkills.put(arena, redkills.get(arena) + 1);
-					getServer().broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + event.getPlayer().getName() + " confirmed a kill!");
-				}else if( b.getData() == (byte) 14  && pteam.get(event.getPlayer().getName()) == "2"){
-					// kill confirmed for blue (picked up red)
-					bluekills.put(arena, bluekills.get(arena) + 1);
-					getServer().broadcastMessage(ChatColor.BLUE + "" + ChatColor.BOLD + event.getPlayer().getName() + " confirmed a kill!");
+				if( b.getData() == (byte) 11 ){
+					if(pteam.get(event.getPlayer().getName()) == "1"){
+						// kill confirmed for red (picked up blue)
+						redkills.put(arena, redkills.get(arena) + 1);
+						getServer().broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + event.getPlayer().getName() + " confirmed a kill!");
+					} else {
+						// kill denied from blue (picked up blue)
+						getServer().broadcastMessage(ChatColor.BLUE + "" + ChatColor.BOLD + event.getPlayer().getName() + " denied a kill!");
+					}
+				}else if( b.getData() == (byte) 14 ){
+					if(pteam.get(event.getPlayer().getName()) == "2"){
+						// kill confirmed for blue (picked up red)
+						bluekills.put(arena, bluekills.get(arena) + 1);
+						getServer().broadcastMessage(ChatColor.BLUE + "" + ChatColor.BOLD + event.getPlayer().getName() + " confirmed a kill!");
+					}else{
+						// kill denied from red (picked up red)
+						getServer().broadcastMessage(ChatColor.RED + "" + ChatColor.BOLD + event.getPlayer().getName() + " denied a kill!");
+					}
 				}else{
 					event.setCancelled(true);
 				}
