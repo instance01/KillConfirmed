@@ -64,6 +64,7 @@ public class Main extends JavaPlugin implements Listener {
 	int reward = 30;
 	int itemid = 264;
 	int itemamount = 1;
+	int kills_to_win = 20;
 	boolean command_reward = false;
 	String cmd = "";
 	boolean start_announcement = false;
@@ -99,6 +100,7 @@ public class Main extends JavaPlugin implements Listener {
 
 		getConfig().options().header("I recommend you to set auto_updating to true for possible future bugfixes. If use_economy is set to false, the winner will get the item reward.");
 		getConfig().addDefault("config.auto_updating", true);
+		getConfig().addDefault("config.kills_to_win", 20);
 		getConfig().addDefault("config.default_max_players", 4);
 		getConfig().addDefault("config.default_min_players", 3);
 		getConfig().addDefault("config.use_economy_reward", true);
@@ -184,7 +186,8 @@ public class Main extends JavaPlugin implements Listener {
 		start_countdown = getConfig().getInt("config.start_countdown");
 		start_announcement = getConfig().getBoolean("config.start_announcement");
 		winner_announcement = getConfig().getBoolean("config.winner_announcement");
-
+		kills_to_win = getConfig().getInt("config.kills_to_win");
+		
 		saved_arena = getConfig().getString("strings.saved.arena").replaceAll("&", "§");
 		saved_lobby = getConfig().getString("strings.saved.lobby").replaceAll("&", "§");
 		saved_setup = getConfig().getString("strings.saved.setup").replaceAll("&", "§");
@@ -921,8 +924,7 @@ public class Main extends JavaPlugin implements Listener {
 				}
 				
 				// TODO item rewards might not work
-				// TODO add customization: 20
-				if (redkills.get(arena) > 20) {
+				if (redkills.get(arena) >= kills_to_win) {
 					for(Player p : arenap.keySet()){
 						if(arenap.get(p).equalsIgnoreCase(arena)){
 							if(pteam.get(p.getName()) == "1"){
