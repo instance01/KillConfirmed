@@ -614,7 +614,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerCommandPreprocessEvent(PlayerCommandPreprocessEvent event) {
-		if (arenap.containsKey(event.getPlayer())) {
+		if (arenap.containsKey(event.getPlayer()) && !event.getPlayer().isOp()) {
 			if (!event.getMessage().startsWith("/kc") && !event.getMessage().startsWith("/killconfirmed")) {
 				event.getPlayer().sendMessage("§cPlease use §6/kc leave §cto leave this minigame.");
 				event.setCancelled(true);
