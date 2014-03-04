@@ -1,0 +1,11 @@
+name: KillConfirm
+main: com.comze_instancelabs.killconfirm.Main
+version: 1.0
+author: instancelabs
+commands:
+   kc:
+      description: Main command
+      usage: /kc [action]
+   killconfirm:
+      description: Main command
+      usage: /killconfirm [action]
