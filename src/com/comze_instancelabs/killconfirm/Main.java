@@ -1,8 +1,10 @@
 package com.comze_instancelabs.killconfirm;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import net.milkbowl.vault.Metrics;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 
@@ -46,16 +48,6 @@ import org.bukkit.scoreboard.ScoreboardManager;
 
 public class Main extends JavaPlugin implements Listener {
 
-	/*
-	 * 
-	 * SETUP
-	 * 
-	 * cm setmainlobby
-	 * 
-	 * for each new arena:
-	 * 
-	 * cm createarena arena cm setlobby arena cm setup arena
-	 */
 
 	public static Economy econ = null;
 
@@ -65,8 +57,6 @@ public class Main extends JavaPlugin implements Listener {
 	public static HashMap<Player, ItemStack[]> pinv = new HashMap<Player, ItemStack[]>();
 	public static HashMap<String, String> pteam = new HashMap<String, String>(); // red = 1; blue = 2
 
-	int rounds_per_game = 10;
-	// int minplayers = 4;
 	int default_max_players = 4;
 	int default_min_players = 3;
 
@@ -109,8 +99,6 @@ public class Main extends JavaPlugin implements Listener {
 
 		getConfig().options().header("I recommend you to set auto_updating to true for possible future bugfixes. If use_economy is set to false, the winner will get the item reward.");
 		getConfig().addDefault("config.auto_updating", true);
-		getConfig().addDefault("config.rounds_per_game", 10);
-		getConfig().addDefault("config.start_countdown", 5);
 		getConfig().addDefault("config.default_max_players", 4);
 		getConfig().addDefault("config.default_min_players", 3);
 		getConfig().addDefault("config.use_economy_reward", true);
@@ -149,10 +137,15 @@ public class Main extends JavaPlugin implements Listener {
 
 		getConfigVars();
 
+		
+		try{
+			Metrics metrics = new Metrics(this); 
+			metrics.start();
+		}catch(IOException e){
+			
+		}
+		
 		/*
-		 * try { Metrics metrics = new Metrics(this); metrics.start(); } catch
-		 * (IOException e) { }
-		 * 
 		 * if (getConfig().getBoolean("config.auto_updating")) { Updater updater
 		 * = new Updater(this, 71774, this.getFile(),
 		 * Updater.UpdateType.DEFAULT, false); }
@@ -180,7 +173,6 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	public void getConfigVars() {
-		rounds_per_game = getConfig().getInt("config.rounds_per_game");
 		default_max_players = getConfig().getInt("config.default_max_players");
 		default_min_players = getConfig().getInt("config.default_min_players");
 		reward = getConfig().getInt("config.money_reward");
