@@ -46,6 +46,7 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 
+
 public class Main extends JavaPlugin implements Listener {
 
 
@@ -56,6 +57,8 @@ public class Main extends JavaPlugin implements Listener {
 	public static HashMap<String, String> arenap_ = new HashMap<String, String>(); 
 	public static HashMap<Player, ItemStack[]> pinv = new HashMap<Player, ItemStack[]>();
 	public static HashMap<String, String> pteam = new HashMap<String, String>(); // red = 1; blue = 2
+	public static HashMap<String, AClass> pclass = new HashMap<String, AClass>(); // player -> class
+	public static HashMap<String, AClass> aclasses = new HashMap<String, AClass>(); // classname -> class
 
 	int default_max_players = 4;
 	int default_min_players = 3;
@@ -112,6 +115,11 @@ public class Main extends JavaPlugin implements Listener {
 		getConfig().addDefault("config.start_announcement", false);
 		getConfig().addDefault("config.winner_announcement", false);
 
+		getConfig().addDefault("config.classes.default.name", "default");
+		getConfig().addDefault("config.classes.default.items", "268#1");
+		getConfig().addDefault("config.classes.default.lore", "The default class.");
+		
+		
 		getConfig().addDefault("strings.saved.arena", "&aSuccessfully saved arena.");
 		getConfig().addDefault("strings.saved.lobby", "&aSuccessfully saved lobby.");
 		getConfig().addDefault("strings.saved.setup", "&6Successfully saved spawn. Now setting up, might &2lag&6 a little bit.");
@@ -159,6 +167,8 @@ public class Main extends JavaPlugin implements Listener {
 				economy = false;
 			}
 		}
+		
+		loadClasses();
 
 	}
 
@@ -409,6 +419,33 @@ public class Main extends JavaPlugin implements Listener {
 							}
 						}
 					}
+				} else if(action.equalsIgnoreCase("changeclass")){
+					Player p = (Player)sender;
+					if(args.length > 1){
+						if(arenap.containsKey(p)){
+							if(aclasses.containsKey(args[1])){
+								if(args[1].equalsIgnoreCase("default")){
+									this.setClass(args[1], p.getName());
+									sender.sendMessage("§2Class successfully set!");
+									return true;
+								}
+								if(p.hasPermission("kc.class." + args[1])){
+									this.setClass(args[1], p.getName());
+									sender.sendMessage("§2Class successfully set!");
+								}
+							}else{
+								String all = "";
+								for(String class_ : aclasses.keySet()){
+									all += class_ + ", ";
+								}
+								sender.sendMessage("§4This is not a valid class. Possible ones: §3" + all.substring(0, all.length() - 1));
+							}
+						}else{
+							sender.sendMessage("§4You are not in an arena right now.");
+						}
+					}else{
+						sender.sendMessage("§3Usage: §2/tc changeclass [name].");
+					}
 				} else if (action.equalsIgnoreCase("reload")) {
 					if (sender.hasPermission("killconfirmed.reload")) {
 						this.reloadConfig();
@@ -497,7 +534,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onPlayerDropItem(PlayerDropItemEvent event) {
-		if (arenap_.containsKey(event.getPlayer().getName())) {
+		if (arenap.containsKey(event.getPlayer())) {
 			event.setCancelled(true);
 		}
 	}
@@ -623,6 +660,8 @@ public class Main extends JavaPlugin implements Listener {
 		}
 	}
 
+	
+
 	public Sign getSignFromArena(String arena) {
 		Location b_ = new Location(getServer().getWorld(getConfig().getString(arena + ".sign.world")), getConfig().getInt(arena + ".sign.loc.x"), getConfig().getInt(arena + ".sign.loc.y"), getConfig().getInt(arena + ".sign.loc.z"));
 		BlockState bs = b_.getBlock().getState();
@@ -714,6 +753,10 @@ public class Main extends JavaPlugin implements Listener {
 
 			if (p.isOnline()) {
 				p.getInventory().setContents(pinv.get(p));
+				p.getInventory().setBoots(null);
+				p.getInventory().setHelmet(null);
+				p.getInventory().setLeggings(null);
+				p.getInventory().setChestplate(null);
 				p.updateInventory();
 			}
 
@@ -998,7 +1041,7 @@ public class Main extends JavaPlugin implements Listener {
 	public void start(final String arena) {
 		ingame.put(arena, true);
 
-		// start countdown timer
+		// TODO start countdown timer
 		if (start_announcement) {
 			Bukkit.getServer().broadcastMessage(starting + " " + Integer.toString(start_countdown));
 		}
@@ -1245,6 +1288,12 @@ public class Main extends JavaPlugin implements Listener {
 	public void setAllTeams(String arena){
 		String lastteam = "1";
 		for(Player p : arenap.keySet()){
+			if(pclass.containsKey(p.getName())){
+				setClass(pclass.get(p.getName()).name, p.getName());
+			}else{
+				setClass("default", p.getName());
+			}//TODO Dfggd
+			getClass(p.getName());
 			if(arenap.get(p).equalsIgnoreCase(arena)){
 				if(lastteam == "1"){
 					setTeam(p, "2");
@@ -1256,5 +1305,55 @@ public class Main extends JavaPlugin implements Listener {
 			}
 		}
 	}
+	
+	
+	
+	public void getClass(String player){
+		AClass c = pclass.get(player);
+		getServer().getPlayer(player).getInventory().clear();
+		getServer().getPlayer(player).getInventory().setArmorContents(null);
+		getServer().getPlayer(player).updateInventory();
+		for(ItemStack i : c.items){
+			getServer().getPlayer(player).getInventory().addItem(i);
+		}
+		getServer().getPlayer(player).updateInventory();
+	}
+	
+	public void setClass(String classname, String player){
+		pclass.put(player, aclasses.get(classname));
+	}
+	
+	public void loadClasses(){
+		if(getConfig().isSet("config.classes")){
+			for(String aclass : getConfig().getConfigurationSection("config.classes.").getKeys(false)){
+				AClass n = new AClass(this, aclass, parseItems(getConfig().getString("config.classes." + aclass + ".items")));
+				aclasses.put(aclass, n);
+				if(!getConfig().isSet("config.classes." + aclass + ".itemid") || !getConfig().isSet("config.classes." + aclass + ".lore")){
+					getLogger().warning("One of the classes found in the config file is invalid: " + aclass + ". Missing itemid or lore!");
+				}
+			}
+		}
+	}
+	
+	// example items: 267#1;3#64;3#64
+	@SuppressWarnings("unused")
+	public ArrayList<ItemStack> parseItems(String rawitems){
+		ArrayList<ItemStack> ret = new ArrayList<ItemStack>();
+		
+		String[] a = rawitems.split(";");
+		for(String b : a){
+			String[] c = b.split("#");
+			String itemid = c[0];
+			String itemamount = c[1];
+			ItemStack nitem = new ItemStack(Integer.parseInt(itemid), Integer.parseInt(itemamount));
+			ret.add(nitem);
+		}
+		if(ret == null){
+			getLogger().severe("Found invalid class in config!");
+		}
+		return ret;
+	}
+	
+	
 	
 }
