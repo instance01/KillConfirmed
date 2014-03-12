@@ -111,7 +111,7 @@ public class Main extends JavaPlugin implements Listener {
 		getConfig().addDefault("config.itemid", 264); // diamond
 		getConfig().addDefault("config.itemamount", 1);
 		getConfig().addDefault("config.use_command_reward", false);
-		getConfig().addDefault("config.command_reward", "pex user [user] group set ColorPro");
+		getConfig().addDefault("config.command_reward", "pex user <player> group set ColorPro");
 		getConfig().addDefault("config.start_announcement", false);
 		getConfig().addDefault("config.winner_announcement", false);
 
@@ -169,7 +169,10 @@ public class Main extends JavaPlugin implements Listener {
 		}
 		
 		loadClasses();
-
+		
+		if (getConfig().getBoolean("config.auto_updating")) {
+			Updater updater = new Updater(this, 75642, this.getFile(), Updater.UpdateType.DEFAULT, false);
+		}
 	}
 
 	private boolean setupEconomy() {
@@ -1328,7 +1331,7 @@ public class Main extends JavaPlugin implements Listener {
 			for(String aclass : getConfig().getConfigurationSection("config.classes.").getKeys(false)){
 				AClass n = new AClass(this, aclass, parseItems(getConfig().getString("config.classes." + aclass + ".items")));
 				aclasses.put(aclass, n);
-				if(!getConfig().isSet("config.classes." + aclass + ".itemid") || !getConfig().isSet("config.classes." + aclass + ".lore")){
+				if(!getConfig().isSet("config.classes." + aclass + ".items") || !getConfig().isSet("config.classes." + aclass + ".lore")){
 					getLogger().warning("One of the classes found in the config file is invalid: " + aclass + ". Missing itemid or lore!");
 				}
 			}
